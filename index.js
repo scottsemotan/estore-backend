@@ -3,6 +3,8 @@ const app = express();
 const promise = require('bluebird');
 const bcrypt = require('bcrypt');
 const session = require('express-session');
+const cors = require('cors');
+
 
 // for bcrypt hashing
 const saltRounds = 10;
@@ -21,7 +23,7 @@ const config = {
     host: 'localhost',
     port: 5432,
     database: 'estore',
-    user: 'filmonkesete',
+    user: 'scottsemotan',
     password: ''
 };
 
@@ -74,7 +76,9 @@ app.get('/inventory/:id', (req, res) => {
 })
 
 // add item to inventory table
-app.post('/inventory', (req, res) => {
+app.options('/inventory', cors()) // enable pre-flight request
+
+app.post('/inventory', cors(), (req, res) => {
     db.query(`INSERT INTO inventory (product_name, description, product_photo, price, quantity)
             VALUES('${req.body.product_name}', '${req.body.description}', '${req.body.product_photo}', '${req.body.price}', '${req.body.quantity}')`)
 })

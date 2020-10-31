@@ -5,6 +5,7 @@ const bcrypt = require('bcrypt');
 const session = require('express-session');
 const cors = require('cors');
 
+app.use(cors());
 
 // for bcrypt hashing
 const saltRounds = 10;
@@ -76,9 +77,7 @@ app.get('/inventory/:id', (req, res) => {
 })
 
 // add item to inventory table
-app.options('/inventory', cors()) // enable pre-flight request
-
-app.post('/inventory', cors(), (req, res) => {
+app.post('/inventory', (req, res) => {
     db.query(`INSERT INTO inventory (product_name, description, product_photo, price, quantity)
             VALUES('${req.body.product_name}', '${req.body.description}', '${req.body.product_photo}', '${req.body.price}', '${req.body.quantity}')`)
 })
@@ -126,6 +125,12 @@ app.post('/register', (req, res) => {
     } else {
         let email = req.body.email;
         let password = req.body.password;
+        let address = req.body.street_address;
+        let address2 = req.body.apt_unit_number;
+        let city = req.body.city;
+        let state = req.body.state;
+        let zip = req.body.zip;
+        let admin = false;
 
         bcrypt.hash(password, saltRounds, function (err, hash) {
             // Store hash in your password DB.
@@ -136,7 +141,7 @@ app.post('/register', (req, res) => {
             //     "hash": passHash
             // })
 
-            db.query(`INSERT INTO users ("password", "email") VALUES('${passHash}', '${email}')`)
+            db.query(`INSERT INTO users ("password", "email", "street_address", "apt_unit_number", "city", "state", "zip", "is_admin") VALUES('${passHash}', '${email}', '${address}', '${address2}', '${city}', '${state}', '${zip}', '${admin}')`)
             console.log("You've been registered...");
             //send redirect to main index page
             res.send('Ok');
@@ -144,6 +149,7 @@ app.post('/register', (req, res) => {
         });
     }
 })
+
 
 // login for user
 app.post('/login', (req, res) => {
@@ -161,17 +167,22 @@ app.post('/login', (req, res) => {
             //res.json(results);
             //console.log(results);
 
-            bcrypt.compare(req.body.password, results[0].account_password, function (err, result) {
+            bcrypt.compare(req.body.password, results[0].password, function (err, result) {
                 //console.log(req.body.password, results.account_password);
                 //res.send("Yay..logged in");
                 //console.log(results);
                 //console.log(`the results...${results[0].account_password}`);
                 if (result === true) {
                     // assign results from db.query above to a session
+                    
                     req.session.user = results;
 
                     console.log(req.session.user);
-                    res.send('Ok');
+                    res.send({
+                        "message" : "Ok",
+                        "session" : req.session.user,
+                        "isAuthenticated" : true
+                    });
                 } else {
                     res.send("Invalid Credentials");
                 }
@@ -203,29 +214,3 @@ function authenticatedMiddleware(req, res, next) {
 app.listen(portNumber, function () {
     console.log(`My API is listening on port ${portNumber}.... `);
 });
-
-
-
-
-// //add item to wishlist
-// app.post('/api/addwish', (req, res) => {
-//     db.query(`INSERT INTO wishlist (profile_id, event_id)
-//                 SELECT '${req.session.user[0].id}', '${req.body.event_id}'
-//                 FROM events
-//                 LIMIT 1`)
-// })
-
-
-// // get user's events for sale
-// app.get('/api/myitems', authenticatedMiddleware, (req, res) => {
-//     console.log(req.session);
-//     db.query(`SELECT * FROM events
-//               WHERE seller_id = ${req.session.user[0].id}`)
-//         .then((results) => {
-//             //console.log(results); 
-//             res.json(results);
-//         })
-//         .catch((err) => {
-//             console.log(err);
-//         })
-// })

@@ -110,7 +110,7 @@ app.get('/order-history/:id', (req, res) => {
 // ---------------- Routes for Authentication ---------------- //
 
 // check if user is already authenticated and has a session
-app.get('/api/checkuser', authenticatedMiddleware, (req, res) => {
+app.get('/login', authenticatedMiddleware, (req, res) => {
     res.send("yah, you good to go");
 })
 
@@ -167,12 +167,12 @@ app.post('/login', (req, res) => {
             //res.json(results);
             //console.log(results);
 
-            bcrypt.compare(req.body.password, results[0].password, function (err, result) {
+            bcrypt.compare(req.body.password, results[0].password, function (err, results) {
                 //console.log(req.body.password, results.account_password);
                 //res.send("Yay..logged in");
                 //console.log(results);
                 //console.log(`the results...${results[0].account_password}`);
-                if (result === true) {
+                if (results === true) {
                     // assign results from db.query above to a session
                     
                     req.session.user = results;
